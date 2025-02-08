@@ -28,6 +28,13 @@ public class MemoryEater
             memoryTable.AddRow(++loopCount, GC.GetTotalMemory(false));
             memoryTable.Write();
         }
+
+        Console.WriteLine($"The heap memory after allocating required memory for the objects : {GC.GetTotalMemory(false)} bytes");
+
+        Thread.Sleep(1000);
+
+        GC.Collect();
+        Console.WriteLine($"The heap memory after the garbage collection of unreferenced objects : {GC.GetTotalMemory(false)} bytes");
     }
 }
 
@@ -36,6 +43,6 @@ class Program
     static void Main(string[] args)
     {
         MemoryEater me = new MemoryEater();
-        me.Allocate(); 
+        me.Allocate();
     }
 }
