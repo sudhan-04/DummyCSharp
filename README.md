@@ -1,3 +1,4 @@
+﻿
 # MEMORY OPTIMIZATION
 ## TASK-1
 ### CODE SNIPPET
@@ -45,7 +46,7 @@ class Program
 - The memory issue in the provided code snippet is fixed and the best approach for the memory management is implemented.
 - The code is optimized by using the best approach for memory management and the heap memory is managed.
 ### OBSERVATION
-- The main reason for the infinte memory allocation lies in infinite loop iteration and not performing garbage collection.
+- The main reason for the infinite memory allocation lies in infinite loop iteration and not performing garbage collection.
 ### INSIGHTS
 - The Memory optimization can be performed by `limiting` the number of loop iterations.
 - Clean up of the allocated memory can be performed by forcing the GC to clear unreferenced objects through `GC.Collect()` method.
@@ -66,7 +67,7 @@ class Program
 
   ![task2 p2](https://github.com/user-attachments/assets/6f6f5e23-60b0-4718-973f-e212b9d1ecc1)
 
-  ![task-2 p2](https://github.com/user-attachments/assets/091af311-f46c-4454-93c1-0fac856a7d40)
+    ![task-2 p2](https://github.com/user-attachments/assets/091af311-f46c-4454-93c1-0fac856a7d40)
 ### INSIGHTS
 - Limiting the loop iterations ends the scope at a finite time and therefore the objects becomes unreferenced.
 - Forcing the `Garbage Collector` through GC.Collect() method ensures the removal of unreferenced objects from the heap memory, thus conserving the memory.
@@ -74,4 +75,4 @@ class Program
 ## TASK-4 
 - The key takeaways and understanding about memory management in C# are documented in the `Memory Optimization` Markdown file.
 - The challenges faced and the approaches taken to resolve them are also included.
-- Justification for the approach performed is expained in the markdown file.
+- Justification for the approach performed is explained in the markdown file.

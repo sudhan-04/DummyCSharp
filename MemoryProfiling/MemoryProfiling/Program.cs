@@ -49,6 +49,5 @@ class Program
         me.Allocate();
 
         Console.ReadKey();
-    }
-
+    }  
 }
