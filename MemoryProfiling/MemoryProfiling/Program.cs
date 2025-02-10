@@ -29,7 +29,7 @@ public class MemoryEater
             memoryTable.AddRow(++loopCount, GC.GetTotalMemory(false));
             memoryTable.Write();
         }
-
+        
         // Measuring heap memory after completion of memory allocation
         Console.WriteLine($"The heap memory after allocating required memory for the objects : {$"{(double) GC.GetTotalMemory(false) / 1000}".Pastel(ConsoleColor.Red)} Kilobytes");
 
