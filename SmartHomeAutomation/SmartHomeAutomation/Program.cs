@@ -1,4 +1,6 @@
-﻿using System.Timers;
+﻿using System.Globalization;
+using System.Timers;
+using CsvHelper;
 
 public class Program
 {
@@ -31,8 +33,17 @@ public class Program
             }
             else if (userChoice == 1)
             {
-                var outputData = File.ReadAllLines("MotionLog.txt").Reverse().Take(5).Reverse();
-                Console.WriteLine(string.Join(Environment.NewLine, outputData));
+                using (StreamReader stream = new StreamReader(@"C:\ProgramData\SmartHomeAutomationSystem\MotionLog.csv"))
+                {
+                    using (CsvReader csvReader = new CsvReader(stream, CultureInfo.InvariantCulture))
+                    {
+                        var list =csvReader.GetRecords<MotionReaderEventArgs>().Reverse().Take(5).Reverse(); 
+                        foreach (var item in list)
+                        {
+                            Console.WriteLine(item.Motion+","+item.EventElapsedTime);
+                        }
+                    }
+                }
             }
             Console.WriteLine("\nPress any key to perform next action");
             Console.ReadKey();
@@ -73,19 +84,29 @@ public class MotionReader
         double maxMotion = 100.0;
 
         double currentMotion = minMotion + random.NextDouble()*(maxMotion - minMotion);
-        MotionReaderEventArgs motionReaderEventArgs = new MotionReaderEventArgs(currentMotion);
+
+        MotionReaderEventArgs motionReaderEventArgs = new MotionReaderEventArgs(currentMotion, elapsedEventArgs.SignalTime.ToString("HH.mm.ss"));
 
         NotifyMotion(this, motionReaderEventArgs);
 
-        LogMotion(elapsedEventArgs.SignalTime, motionReaderEventArgs);
+        LogMotion(motionReaderEventArgs);
         
     }
 
-    private void LogMotion(DateTime eventElapsedTime, MotionReaderEventArgs motionReaderEventArgs)
+    private void LogMotion(MotionReaderEventArgs motionReaderEventArgs)
     {
-        using (StreamWriter streamWriter = new StreamWriter("MotionLog.txt", true) )
+        using (StreamWriter streamWriter = new StreamWriter(@"C:\ProgramData\SmartHomeAutomationSystem\MotionLog.csv", true) )
         {
-            streamWriter.Write($"\n{motionReaderEventArgs.Motion} - At Time : {eventElapsedTime.ToString("HH : mm : ss")}");
+            using (var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture))
+            {
+                if (!File.Exists(@"C:\ProgramData\SmartHomeAutomationSystem\MotionLog.csv") || new FileInfo(@"C:\ProgramData\SmartHomeAutomationSystem\MotionLog.csv").Length == 0)
+                {
+                    csvWriter.WriteHeader<MotionReaderEventArgs>();
+                    csvWriter.NextRecord();
+                }
+                csvWriter.WriteRecord(motionReaderEventArgs);
+                csvWriter.NextRecord();
+            }
         }
     }
 
@@ -99,9 +120,11 @@ public class MotionReaderEventArgs : EventArgs
 {
     public double Motion { get; }
 
-    public MotionReaderEventArgs(double Motion)
+    public string EventElapsedTime { get; }
+    public MotionReaderEventArgs(double Motion, string EventElapsedTime)
     {
         this.Motion = Motion;
+        this.EventElapsedTime = EventElapsedTime;
     }
 }
 
