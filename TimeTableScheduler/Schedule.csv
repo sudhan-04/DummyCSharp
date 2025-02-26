@@ -1,0 +1,37 @@
+Day,Period,Subject,StartTime,EndTime
+Monday,1,Digital Image Processing,18:29:00,18:30:00
+Monday,2,Microwave Engineering and Optical Communication,09:55:00,10:50:00
+Monday,3,Wireless Communication and Networks,11:05:00,12:00:00
+Monday,4,Wireless Communication and Networks,12:00:00,12:55:00
+Monday,5,Library,02:00:00,02:55:00
+Monday,6,Wireless Communication and Networking Laboratory/High Frequency Laboratory,02:55:00,03:50:00
+Monday,7,Project Phase I,03:50:00,04:45:00
+Tuesday,1,Wireless Communication and Networks,19:58:00,20:00:00
+Tuesday,2,Digital Image Processing,09:55:00,10:50:00
+Tuesday,3,Library,11:05:00,12:00:00
+Tuesday,4,Microwave Engineering and Optical Communication,12:00:00,12:55:00
+Tuesday,5,Digital Image Processing,02:00:00,02:55:00
+Tuesday,6,Wireless Communication and Networking Laboratory/High Frequency Laboratory,02:55:00,03:50:00
+Tuesday,7,P.Ed,03:50:00,04:45:00
+Wednesday,1,Digital Image Processing,19:57:00,19:59:00
+Wednesday,2,Microwave Engineering and Optical Communication,13:13:00,12:48:00
+Wednesday,3,Library,13:08:00,13:10:00
+Wednesday,4,Elective V: Sensors and Transducers/Elective VI: Biomedical Instrumentation,12:00:00,12:55:00
+Wednesday,5,Digital Image Processing,02:00:00,02:55:00
+Wednesday,6,Library,02:55:00,03:50:00
+Wednesday,7,Project Phase I,03:50:00,04:45:00
+Thursday,1,Microwave Engineering and Optical Communication,09:00:00,09:55:00
+Thursday,2,Digital Image Processing,09:55:00,10:50:00
+Thursday,3,Wireless Communication and Networking,11:05:00,12:00:00
+Thursday,4,Elective V: Sensors and Transducers,12:00:00,12:55:00
+Thursday,5,Elective VI: Biomedical Instrumentation,02:00:00,02:55:00
+Thursday,6,Library,02:55:00,03:50:00
+Thursday,7,Project Phase I,03:50:00,04:45:00
+Friday,1,Elective V: Sensors and Transducers/Elective VI: Biomedical Instrumentation,09:00:00,09:55:00
+Friday,2,Wireless Communication and Networks,09:55:00,10:50:00
+Friday,3,Microwave Engineering and Optical Communication,11:05:00,12:00:00
+Friday,4,Digital Image Processing,12:00:00,12:55:00
+Friday,5,-,02:00:00,02:55:00
+Friday,6,Project Phase I (Project Presentation),02:55:00,03:50:00
+Friday,7,-,03:50:00,04:45:00
+Tuesday,3,Elective V: Sensors and Transducers/Elective VI: Biomedical Instrumentation,19:45:00,19:16:00
