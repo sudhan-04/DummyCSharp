@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlugInSystem(5)", "PlugInSystem(5)\PlugInSystem(5).csproj", "{A656FFAB-2903-46C4-B827-31542F1678ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageRotator", "ImageRotator\ImageRotator.csproj", "{43B55246-B21B-4D6F-AC0E-1A25FC51C306}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrayScaleConverter", "GrayScaleConverter\GrayScaleConverter.csproj", "{B1BE953F-5643-4B61-9120-E22C2C1A5C86}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A656FFAB-2903-46C4-B827-31542F1678ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A656FFAB-2903-46C4-B827-31542F1678ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A656FFAB-2903-46C4-B827-31542F1678ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A656FFAB-2903-46C4-B827-31542F1678ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43B55246-B21B-4D6F-AC0E-1A25FC51C306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43B55246-B21B-4D6F-AC0E-1A25FC51C306}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43B55246-B21B-4D6F-AC0E-1A25FC51C306}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43B55246-B21B-4D6F-AC0E-1A25FC51C306}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1BE953F-5643-4B61-9120-E22C2C1A5C86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1BE953F-5643-4B61-9120-E22C2C1A5C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1BE953F-5643-4B61-9120-E22C2C1A5C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1BE953F-5643-4B61-9120-E22C2C1A5C86}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
