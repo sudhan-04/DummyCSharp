@@ -57,7 +57,7 @@ namespace TimeTracker.View
             .Start(progressBar =>
             {
                 var task = progressBar.AddTask($"[green]{displayMessage}[/]");
-                while (!task.IsFinished) { task.Increment(new Random().Next(5,25)); Thread.Sleep(300); }
+                while (!task.IsFinished) { task.Increment(new Random().Next(5, 25)); Thread.Sleep(300); }
             });
         }
 
@@ -66,19 +66,32 @@ namespace TimeTracker.View
             Console.WriteLine($"\nWelcome {userName}".Pastel(ConsoleColor.Cyan));
         }
 
-        public void PrintUserInformation(string userName)
+        public void PrintUserInformation(User user)
         {
+            string userName = user.UserName;
             var consoleWidth = Console.WindowWidth;
             Console.SetCursorPosition(consoleWidth - userName.Length - 1, 0);
             Console.WriteLine($"{userName}".Pastel(ConsoleColor.Magenta));
             Console.SetCursorPosition(consoleWidth - DateTime.Now.ToString("MMM d,yyyy - h:mm tt").Length - 1, 1);
             Console.WriteLine($"{DateTime.Now.ToString("MMM d,yyyy - h:mm tt")}".Pastel(ConsoleColor.Magenta));
+            var runningTask = user.UserTasks.Where(t => t.Status == UserTaskStatus.Running).FirstOrDefault();
+            string? runningTaskDetails;
+            if (runningTask == null)
+            {
+                runningTaskDetails = "No tasks are currently running.";
+            }
+            else
+            {
+                runningTaskDetails = "Current Running Task : " + runningTask.Heading + " - Start Time : " + runningTask.StartTime.Value.ToString("MMM d,yyyy - h:mm tt");
+            }
+            Console.SetCursorPosition(consoleWidth - runningTaskDetails.Length - 1, 2);
+            Console.WriteLine($"{runningTaskDetails}".Pastel(ConsoleColor.Magenta));
         }
 
         public void PrintSpecificTaskInformation(UserTask task)
         {
             ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "TaskStatus", "StartTime", "EndTime", "TimeExecuted");
-            taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yy     - h:mm tt") : task.StartTime, task.EndTime.HasValue ? task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
+            taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yy - h:mm tt") : task.StartTime, task.EndTime.HasValue ? task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
             taskTable.Write();
         }
 
@@ -97,12 +110,13 @@ namespace TimeTracker.View
             Console.WriteLine("\nThere are no matches found !!".Pastel(ConsoleColor.Red));
         }
 
-        public void PrintTasks(List<UserTask> tasks)
+        public void PrintTasks(List<UserTask> tasks, string displayMessage)
         {
+            Console.WriteLine($"{displayMessage}".Pastel(ConsoleColor.Cyan));
             ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "TaskStatus", "StartTime", "EndTime", "TimeExecuted");
             foreach (UserTask task in tasks)
             {
-                taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.StartTime, task.EndTime.HasValue ?  task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
+                taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.StartTime, task.EndTime.HasValue ? task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
             }
 
             taskTable.Write();
@@ -112,6 +126,7 @@ namespace TimeTracker.View
         {
             if (userTasks.Count >= 3)
             {
+                Console.WriteLine("\nRecently updated three tasks : ".Pastel(ConsoleColor.Cyan));
                 ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "TaskStatus", "StartTime", "EndTime", "TimeExecuted");
                 UserTask task;
 
@@ -124,6 +139,11 @@ namespace TimeTracker.View
 
                 taskTable.Write();
             }
+        }
+
+        public void PrintNoTasksPresent()
+        {
+            Console.WriteLine("\nThere are no tasks present !!!".Pastel(ConsoleColor.Red));
         }
 
         public void PrintInvalidTaskOperation()
@@ -164,7 +184,32 @@ namespace TimeTracker.View
 
         public void PrintExportedToCsv()
         {
-            Console.WriteLine("The tasks data are successfully exported to CSV File.".Pastel(ConsoleColor.Cyan));
+            Console.WriteLine("\nThe tasks data are successfully exported to CSV File.".Pastel(ConsoleColor.Cyan));
+            Console.Write("\nOpening the file".Pastel(ConsoleColor.Cyan));
+            int count = 0;
+            while (count < 10)
+            {
+                Console.Write(".".Pastel(ConsoleColor.Cyan));
+                Thread.Sleep(100);
+                count++;
+            }
+            Console.WriteLine();
+        }
+
+        public void PrintExitMessage()
+        {
+            Console.Clear();
+            var consoleWidth = Console.WindowWidth;
+            var consoleHeight = Console.WindowHeight;
+            Console.SetCursorPosition(consoleWidth / 2 - 10, consoleHeight / 2);
+            Console.Write("Exiting Application".Pastel(ConsoleColor.Magenta));
+            int count = 0;
+            while (count < 10)
+            {
+                Console.Write(".".Pastel(ConsoleColor.Magenta));
+                Thread.Sleep(100);
+                count++;
+            }
         }
     }
 }

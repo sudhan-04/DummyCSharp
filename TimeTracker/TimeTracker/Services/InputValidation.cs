@@ -2,9 +2,9 @@
 {
     internal class InputValidation
     {
-        public bool IsValidInput(string inputString)
+        public bool IsInvalidInput(string inputString)
         {
-            return (inputString == null || inputString == "");
+            return string.IsNullOrEmpty(inputString) || inputString.TrimStart().Equals("");
         }
 
         public bool IsValidInteger(string inputString)

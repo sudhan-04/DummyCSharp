@@ -13,7 +13,43 @@
         SelectTask,
         ExportToCsv,
         ViewTasks,
+        ManageTasks,
         LogOut
+    }
+
+    public enum TaskListOperations
+    {
+        FilterTasks,
+        SortTasks,
+        ViewTaskSummary,
+        ExportToCsv,
+        ReturnToDashboard
+    }
+
+    public enum SortingField
+    {
+        TaskStatus,
+        Heading,
+        StartTime,
+        TimeExecuted,
+        EndTime
+    }
+
+    public enum SummaryOptions
+    {
+        Daily,
+        Weekly,
+        Monthly
+    }
+
+    public enum FilteringField
+    {
+        Heading,
+        TaskStatus,
+        StartTime,
+        TimeExecuted,
+        EndTime,
+        Description
     }
 
     public enum FilterChoice

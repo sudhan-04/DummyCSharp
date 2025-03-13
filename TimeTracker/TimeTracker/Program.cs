@@ -1,7 +1,10 @@
-﻿using TimeTracker.Controller;
+﻿using System.Runtime.InteropServices;
+using TimeTracker.Controller;
 using TimeTracker.Model;
 using TimeTracker.Services;
 using TimeTracker.View;
+using Pastel;
+using System.Runtime.CompilerServices;
 
 public class Program
 {
@@ -14,6 +17,14 @@ public class Program
         Encryptor encryptor = new Encryptor();
         UserController userController = new UserController(inputManager, outputManager, fileHandler, encryptor);
         TaskController taskController = new TaskController(inputManager, outputManager, fileHandler);
+
+        AppDomain.CurrentDomain.ProcessExit += (sender, e) => outputManager.PrintExitMessage();
+
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            outputManager.PrintExitMessage();
+            Environment.Exit(0);
+        };
 
         outputManager.PrintWelcomeMessage();
         Dashboard dashboardChoice;
@@ -34,7 +45,7 @@ public class Program
                 do
                 {
                     user = fileHandler.ReadJsonFile($"{fileFolderPath}\\{userAction}.json");
-                    outputManager.PrintUserInformation(user.UserName);
+                    outputManager.PrintUserInformation(user);
                     outputManager.PrintRecentTask(user.UserTasks);
                     dashboardChoice = taskController.GetDashboardChoice(userAction, inputManager.GetUserOption());
                     outputManager.PrintAnyKeyToPerformAction();

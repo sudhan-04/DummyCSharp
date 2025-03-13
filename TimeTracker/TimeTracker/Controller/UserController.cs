@@ -1,7 +1,6 @@
 ﻿using TimeTracker.Model;
 using TimeTracker.Services;
 using TimeTracker.View;
-using UserTask = TimeTracker.Model.UserTask;
 
 namespace TimeTracker.Controller
 {
@@ -22,7 +21,7 @@ namespace TimeTracker.Controller
 
         public int StartApplication()
         {
-            InitialMenu userAction = (InitialMenu) Enum.Parse(typeof(InitialMenu), _inputManager.GetUserType());
+            InitialMenu userAction = (InitialMenu)Enum.Parse(typeof(InitialMenu), _inputManager.GetUserType());
             Console.Clear();
             switch (userAction)
             {
@@ -59,8 +58,8 @@ namespace TimeTracker.Controller
                 user.UserName = _inputManager.GetUserName();
                 user.UserTasks = new List<UserTask>();
                 Directory.CreateDirectory(fileFolderPath);
-                _fileHandler.WriteToJsonFile(fileFolderPath+ $"\\{user.UserId}.json", user);
-                
+                _fileHandler.WriteToJsonFile(fileFolderPath + $"\\{user.UserId}.json", user);
+
                 _outputManager.PrintSuccessfulRegistration();
                 _outputManager.PrintWelcomeUser(user.UserName);
                 return user.UserId;
