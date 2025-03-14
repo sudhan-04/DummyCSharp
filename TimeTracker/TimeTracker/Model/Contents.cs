@@ -30,9 +30,7 @@
     {
         TaskStatus,
         Heading,
-        StartTime,
-        TimeExecuted,
-        EndTime
+        TimeExecuted
     }
 
     public enum SummaryOptions
@@ -46,9 +44,7 @@
     {
         Heading,
         TaskStatus,
-        StartTime,
         TimeExecuted,
-        EndTime,
         Description
     }
 
@@ -71,11 +67,15 @@
 
     public enum EditField
     {
-        EditHeading,
-        EditDescription,
-        EditStartTime,
-        EditEndTime,
-        EditTimeExecuted
+        Heading,
+        Description,
+        TimeInterval
+    }
+
+    public enum TimeIntervalOptions
+    {
+        DeleteTimeInterval,
+        EditTimeInterval
     }
 
     public enum UserTaskStatus

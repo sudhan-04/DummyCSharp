@@ -9,6 +9,7 @@ using TimeTracker.Services;
 using System.Diagnostics;
 using ConsoleTables;
 using Pastel;
+using Spectre.Console;
 
 namespace TimeTracker.Controller
 {
@@ -112,8 +113,7 @@ namespace TimeTracker.Controller
             newTask.Heading = _inputManager.GetTaskHeading();
             newTask.Description = _inputManager.GetTaskDescription();
             newTask.Status = UserTaskStatus.Created;
-            newTask.StartTime = null;
-            newTask.EndTime = null;
+            newTask.TimeIntervals = new Dictionary<string, string> ();
             user.UserTasks?.Add(newTask);
             var fileFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TimeTracker\\UserData");
             _fileHandler.WriteToJsonFile($"{fileFolderPath}\\{user.UserId}.json", user);
@@ -128,7 +128,7 @@ namespace TimeTracker.Controller
                 if (user.UserTasks?[taskIndex].Status == UserTaskStatus.Created)
                 {
                     user.UserTasks[taskIndex].Status = UserTaskStatus.Running;
-                    user.UserTasks[taskIndex].StartTime = DateTime.Now;
+                    user.UserTasks[taskIndex].TimeIntervals[DateTime.Now.ToString()] = null;
                 }
                 else if (user.UserTasks?[taskIndex].Status == UserTaskStatus.Stopped)
                 {
@@ -136,8 +136,7 @@ namespace TimeTracker.Controller
                     userTask.Heading = user.UserTasks[taskIndex].Heading;
                     userTask.Description = user.UserTasks[taskIndex].Description;
                     userTask.Status = UserTaskStatus.Running;
-                    userTask.StartTime = DateTime.Now;
-                    userTask.EndTime = null;
+                    userTask.TimeIntervals[DateTime.Now.ToString()] = null;
                     user.UserTasks.Add(userTask);
                 }
                 else
@@ -161,8 +160,14 @@ namespace TimeTracker.Controller
             if (user.UserTasks?[taskIndex].Status == UserTaskStatus.Running)
             {
                 user.UserTasks[taskIndex].Status = UserTaskStatus.Paused;
-                user.UserTasks[taskIndex].PausedTimesList.Add(DateTime.Now);
-                user = CalculateTimeExecuted(user, taskIndex);
+                var lastInterval = user.UserTasks[taskIndex].TimeIntervals.LastOrDefault();
+
+                if(lastInterval.Key != null && lastInterval.Value == null)
+                {
+                    user.UserTasks[taskIndex].TimeIntervals[lastInterval.Key] = DateTime.Now.ToString();
+                }
+
+                user.UserTasks[taskIndex].TimeExecuted = CalculateTimeExecuted(user, taskIndex);
                 var fileFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TimeTracker\\UserData");
                 _fileHandler.WriteToJsonFile($"{fileFolderPath}\\{user.UserId}.json", user);
                 _outputManager.PrintTaskPaused();
@@ -173,62 +178,16 @@ namespace TimeTracker.Controller
             }
         }
 
-        private User CalculateTimeExecuted(User user, int taskIndex)
+        private TimeSpan? CalculateTimeExecuted(User user, int taskIndex)
         {
-            var pausedTimesCount = user.UserTasks[taskIndex].PausedTimesList.Count();
-            var resumedTimesCount = user.UserTasks[taskIndex].ResumedTimesList.Count();
-
-            if (pausedTimesCount != 0 && resumedTimesCount != 0)
+            TimeSpan? timeSpan = TimeSpan.Zero;
+            var dict = user.UserTasks[taskIndex].TimeIntervals;
+            foreach(var timeInterval in dict)
             {
-                if (pausedTimesCount == user.UserTasks[taskIndex].ResumedTimesList.Count || pausedTimesCount - 1 == user.UserTasks[taskIndex].ResumedTimesList.Count)
-                {
-                    if (pausedTimesCount != 1)
-                    {
-                        for (int count = 0; count < pausedTimesCount; count++)
-                        {
-                            if (count == 0)
-                            {
-                                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].PausedTimesList[0] - user.UserTasks[taskIndex].StartTime;
-                            }
-                            else if (count == pausedTimesCount - 1)
-                            {
-                                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].EndTime - user.UserTasks[taskIndex].ResumedTimesList[pausedTimesCount - 1];
-
-                            }
-                            else
-                            {
-                                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].PausedTimesList[count + 1] - user.UserTasks[taskIndex].ResumedTimesList[count];
-                            }
-                        }
-                    }
-                }
-
-                return user;
+                timeSpan += DateTime.Parse(timeInterval.Value) - DateTime.Parse(timeInterval.Key);
             }
 
-            else if (pausedTimesCount == 1 && resumedTimesCount == 1)
-            {
-                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].PausedTimesList[0] - user.UserTasks[taskIndex].StartTime;
-                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].EndTime - user.UserTasks[taskIndex].ResumedTimesList[0];
-                return user;
-            }
-
-            else if (pausedTimesCount == 1 && resumedTimesCount == 0)
-            {
-                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].PausedTimesList[0] - user.UserTasks[taskIndex].StartTime;
-                return user;
-            }
-
-            else if(pausedTimesCount == 0)
-            {
-                user.UserTasks[taskIndex].TimeExecuted += user.UserTasks[taskIndex].EndTime - user.UserTasks[taskIndex].StartTime;
-                return user;
-            }
-
-            else
-            {
-                return user;
-            }
+            return timeSpan;
         }
 
         private void StopTask(User user, int taskIndex)
@@ -236,8 +195,13 @@ namespace TimeTracker.Controller
             if (user.UserTasks?[taskIndex].Status == UserTaskStatus.Running)
             {
                 user.UserTasks[taskIndex].Status = UserTaskStatus.Stopped;
-                user.UserTasks[taskIndex].EndTime = DateTime.Now;
-                user = CalculateTimeExecuted(user, taskIndex);
+                var lastInterval = user.UserTasks[taskIndex].TimeIntervals.LastOrDefault();
+
+                if (lastInterval.Key != null && lastInterval.Value == null)
+                {
+                    user.UserTasks[taskIndex].TimeIntervals[lastInterval.Key] = DateTime.Now.ToString();
+                }
+                user.UserTasks[taskIndex].TimeExecuted = CalculateTimeExecuted(user, taskIndex);
                 var fileFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TimeTracker\\UserData");
                 _fileHandler.WriteToJsonFile($"{fileFolderPath}\\{user.UserId}.json", user);
                 _outputManager.PrintTaskStopped();
@@ -253,7 +217,12 @@ namespace TimeTracker.Controller
             if (user.UserTasks?[taskIndex].Status == UserTaskStatus.Paused)
             {
                 user.UserTasks[taskIndex].Status = UserTaskStatus.Running;
-                user.UserTasks[taskIndex].ResumedTimesList?.Add(DateTime.Now);
+                var lastInterval = user.UserTasks[taskIndex].TimeIntervals.LastOrDefault();
+
+                if (lastInterval.Key != null && lastInterval.Value != null)
+                {
+                    user.UserTasks[taskIndex].TimeIntervals[DateTime.Now.ToString()] = null;
+                }
                 var fileFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TimeTracker\\UserData");
                 _fileHandler.WriteToJsonFile($"{fileFolderPath}\\{user.UserId}.json", user);
                 _outputManager.PrintTaskResumed();
@@ -285,46 +254,35 @@ namespace TimeTracker.Controller
             if (editChoiceIndex > -1)
             {
                 EditField editField = (EditField)Enum.Parse(typeof(EditField), _inputManager.GetEditField());
+
                 switch (editField)
                 {
-                    case EditField.EditHeading:
+                    case EditField.Heading:
                         user.UserTasks[editChoiceIndex].Heading = _inputManager.GetTaskHeading();
+                        _outputManager.PrintTaskUpdated();
                         break;
 
-                    case EditField.EditDescription:
+                    case EditField.Description:
                         user.UserTasks[editChoiceIndex].Description = _inputManager.GetTaskDescription();
+                        _outputManager.PrintTaskUpdated();
                         break;
-
-                    case EditField.EditStartTime:
-                        var editedStartTime = _inputManager.GetStartDateTime();
-                        var editedEndTime = user.UserTasks?[editChoiceIndex].EndTime;
-                        while (editedEndTime < editedStartTime)
+                    case EditField.TimeInterval:
+                        var timeInterval = _inputManager.SelectTimeInterval(user.UserTasks[editChoiceIndex].TimeIntervals);
+                        var intervalOperation = (TimeIntervalOptions)Enum.Parse(typeof(TimeIntervalOptions), _inputManager.GetIntervalAction());
+                        switch(intervalOperation)
                         {
-                            editedEndTime = _inputManager.GetValidTimeShifts(user, editChoiceIndex, false);
+                            case TimeIntervalOptions.DeleteTimeInterval:
+                                user.UserTasks[editChoiceIndex].TimeIntervals = DeleteTimeInterval(timeInterval, user.UserTasks[editChoiceIndex].TimeIntervals);
+                                user.UserTasks[editChoiceIndex].TimeExecuted = CalculateTimeExecuted(user, editChoiceIndex);
+                                break;
+                            case TimeIntervalOptions.EditTimeInterval:
+                                user.UserTasks[editChoiceIndex].TimeIntervals = EditTimeInterval(timeInterval, user.UserTasks[editChoiceIndex].TimeIntervals);
+                                user.UserTasks[editChoiceIndex].TimeExecuted = CalculateTimeExecuted(user, editChoiceIndex);
+                                break;
                         }
-
-                        user.UserTasks[editChoiceIndex].StartTime = editedStartTime;
-                        user.UserTasks[editChoiceIndex].EndTime = editedEndTime;
-                        break;
-
-                    case EditField.EditEndTime:
-                        var modifiedEndTime = _inputManager.GetEndDateTime();
-                        var modifiedStartTime = user.UserTasks?[editChoiceIndex].StartTime;
-                        while (modifiedEndTime < modifiedStartTime)
-                        {
-                            modifiedStartTime = _inputManager.GetValidTimeShifts(user, editChoiceIndex, true);
-                        }
-
-                        user.UserTasks[editChoiceIndex].StartTime = modifiedStartTime;
-                        user.UserTasks[editChoiceIndex].EndTime = modifiedEndTime;
-                        break;
-
-                    case EditField.EditTimeExecuted:
-                        user.UserTasks[editChoiceIndex].TimeExecuted = _inputManager.GetTimeExecuted();
                         break;
                 }
 
-                _outputManager.PrintTaskUpdated();
                 _outputManager.PrintSpecificTaskInformation(user.UserTasks[editChoiceIndex]);
                 var fileFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TimeTracker\\UserData");
                 _fileHandler.WriteToJsonFile($"{fileFolderPath}\\{user.UserId}.json", user);
@@ -333,6 +291,42 @@ namespace TimeTracker.Controller
             {
                 _outputManager.PrintNoMatches();
             }
+        }
+
+        static Dictionary<string, string> DeleteTimeInterval(string selectedInterval, Dictionary<string, string> timeIntervals)
+        {
+            var parts = selectedInterval.Split(" -- ");
+            string startTime = parts[0];
+
+            if (timeIntervals.ContainsKey(startTime))
+            {
+                timeIntervals.Remove(startTime);
+                AnsiConsole.MarkupLine("[red]\nInterval deleted successfully![/]");
+            }
+
+            return timeIntervals.OrderBy(i => i.Key).ToDictionary(j => j.Key, j => j.Value);
+        }
+
+        private Dictionary<string, string> EditTimeInterval(string selectedInterval, Dictionary<string, string> timeIntervals)
+        {
+            var parts = selectedInterval.Split(" -- ");
+            string startTime = parts[0];
+            string? endTime =  parts[1];
+
+            var newStartTime = _inputManager.GetStartDateTime(startTime);
+            if(newStartTime == null)
+                newStartTime = DateTime.Parse(startTime);
+
+            var newEndTime = _inputManager.GetEndDateTime(newStartTime.ToString(), endTime);
+            if(newEndTime == null)
+                newEndTime = DateTime.Parse(endTime);
+
+            timeIntervals.Remove(startTime);
+            timeIntervals[newStartTime.ToString()] = newEndTime.ToString();
+            
+            AnsiConsole.MarkupLine("[green]\nInterval updated successfully![/]");
+
+            return timeIntervals.OrderBy(i => i.Key).ToDictionary(j => j.Key, j => j.Value);
         }
 
         private int SelectTaskIndex(User user)
@@ -402,13 +396,8 @@ namespace TimeTracker.Controller
                 {
                     var currentTask = Enum.Parse(typeof(TaskOperations), _inputManager.GetTaskOperation());
 
-                    if (user.UserTasks[taskIndex].PausedTimesList == null)
-                        user.UserTasks[taskIndex].PausedTimesList = new List<DateTime>();
-                    if (user.UserTasks[taskIndex].ResumedTimesList == null)
-                        user.UserTasks[taskIndex].ResumedTimesList = new List<DateTime>();
                     if (user.UserTasks[taskIndex].TimeExecuted == null)
                         user.UserTasks[taskIndex].TimeExecuted = TimeSpan.Zero;
-
 
                     switch (currentTask)
                     {
@@ -444,9 +433,7 @@ namespace TimeTracker.Controller
             var runningTaskIndex = user.UserTasks.IndexOf(user.UserTasks.Where(i => i.Status == UserTaskStatus.Running).FirstOrDefault());
             if (runningTaskIndex >= 0)
             {
-                user.UserTasks[runningTaskIndex].Status = UserTaskStatus.Paused;
-                var fileFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "TimeTracker\\UserData");
-                _fileHandler.WriteToJsonFile($"{fileFolderPath}\\{user.UserId}.json", user);
+                PauseTask(user, runningTaskIndex);
             }
         }
 
@@ -493,12 +480,6 @@ namespace TimeTracker.Controller
                 case SortingField.TaskStatus:
                     tasks = tasks.OrderBy(x => x.Status).ToList();
                     break;
-                case SortingField.StartTime:
-                    tasks = tasks.OrderBy(x => x.StartTime).ToList();
-                    break;
-                case SortingField.EndTime:
-                    tasks = tasks.OrderBy(x => x.EndTime).ToList();
-                    break;
                 case SortingField.TimeExecuted:
                     tasks = tasks.OrderBy(x => x.TimeExecuted).ToList();
                     break;
@@ -526,14 +507,6 @@ namespace TimeTracker.Controller
                         var status = _inputManager.GetTaskStatus();
                         var taskStatus = (UserTaskStatus)Enum.Parse(typeof(UserTaskStatus), status);
                         tasks = tasks.Where(x => x.Status == taskStatus).ToList();
-                        break;
-                    case FilteringField.StartTime:
-                        var taskStartTime = _inputManager.GetTargetStartDate();
-                        tasks = tasks.Where(x => x.StartTime?.Date == taskStartTime).ToList();
-                        break;
-                    case FilteringField.EndTime:
-                        var taskEndTime = _inputManager.GetTargetEndDate();
-                        tasks = tasks.Where(x => x.EndTime?.Date == taskEndTime).ToList();
                         break;
                     case FilteringField.TimeExecuted:
                         var taskExecutedTime = _inputManager.GetTimeExecuted();
@@ -569,121 +542,121 @@ namespace TimeTracker.Controller
 
         private void GenerateDailySummary(List<UserTask> tasks)
         {
-            var targetDate = _inputManager.GetTargetDate();
-            ConsoleTable consoleTable = new ConsoleTable("Total Time Spent", "Longest Task - Time Spent", "Shortest Task - Time Spent", "Total number of tasks");
-            var targetDateTasks = tasks.Where(x => x.StartTime?.Date == (targetDate));
-            var timeSpentOnTasks = targetDateTasks.Select(x => x.TimeExecuted);
+        //    var targetDate = _inputManager.GetTargetDate();
+        //    ConsoleTable consoleTable = new ConsoleTable("Total Time Spent", "Longest Task - Time Spent", "Shortest Task - Time Spent", "Total number of tasks");
+        //    var targetDateTasks = targetDate;
+        //    var timeSpentOnTasks = targetDateTasks.Select(x => x.TimeExecuted);
 
-            TimeSpan? totalTime = TimeSpan.Zero;
-            foreach (var timeSpent in timeSpentOnTasks)
-            {
-                totalTime += timeSpent;
-            }
+        //    TimeSpan? totalTime = TimeSpan.Zero;
+        //    foreach (var timeSpent in timeSpentOnTasks)
+        //    {
+        //        totalTime += timeSpent;
+        //    }
 
-            var longestTask = targetDateTasks.MaxBy(x => x.TimeExecuted);
-            var longestTaskDetails = longestTask?.Heading + " - " + longestTask?.TimeExecuted.ToString();
+        //    var longestTask = targetDateTasks.MaxBy(x => x.TimeExecuted);
+        //    var longestTaskDetails = longestTask?.Heading + " - " + longestTask?.TimeExecuted.ToString();
 
-            var shortestTask = targetDateTasks.MinBy(x => x.TimeExecuted);
-            var shortestTaskDetails = shortestTask?.Heading + " - " + shortestTask?.TimeExecuted.ToString();
+        //    var shortestTask = targetDateTasks.MinBy(x => x.TimeExecuted);
+        //    var shortestTaskDetails = shortestTask?.Heading + " - " + shortestTask?.TimeExecuted.ToString();
 
-            var tasksCount = targetDateTasks.Count();
+        //    var tasksCount = targetDateTasks.Count();
 
-            consoleTable.AddRow(totalTime, longestTaskDetails, shortestTaskDetails, tasksCount);
-            consoleTable.Write();
+        //    consoleTable.AddRow(totalTime, longestTaskDetails, shortestTaskDetails, tasksCount);
+        //    consoleTable.Write();
         }
 
         private void GenerateWeeklySummary(List<UserTask> tasks)
         {
-            var startOfWeek = DateTime.Now.AddDays(-(int)DateTime.Now.DayOfWeek);
-            var endOfWeek = DateTime.Now.Date;
+            //var startOfWeek = DateTime.Now.AddDays(-(int)DateTime.Now.DayOfWeek);
+            //var endOfWeek = DateTime.Now.Date;
 
-            ConsoleTable consoleTable = new ConsoleTable("Total Time Spent", "Average Time Spent Each day", "Most Productive Day - Time Spent", "Longest Task - Time Spent", "Shortest Task - Time Spent", "Total number of tasks");
+            //ConsoleTable consoleTable = new ConsoleTable("Total Time Spent", "Average Time Spent Each day", "Most Productive Day - Time Spent", "Longest Task - Time Spent", "Shortest Task - Time Spent", "Total number of tasks");
 
-            var weeklyTasks = tasks.Where(x => x.StartTime?.Date >= startOfWeek && x.StartTime?.Date <= endOfWeek);
-            var timeSpentOnTasks = weeklyTasks.Select(x => x.TimeExecuted);
+            //var weeklyTasks = tasks.Where(x => x.StartTime?.Date >= startOfWeek && x.StartTime?.Date <= endOfWeek);
+            //var timeSpentOnTasks = weeklyTasks.Select(x => x.TimeExecuted);
 
-            TimeSpan? totalTime = TimeSpan.Zero;
-            foreach (var timeSpent in timeSpentOnTasks)
-            {
-                totalTime += timeSpent;
-            }
+            //TimeSpan? totalTime = TimeSpan.Zero;
+            //foreach (var timeSpent in timeSpentOnTasks)
+            //{
+            //    totalTime += timeSpent;
+            //}
 
-            var longestTask = weeklyTasks.MaxBy(x => x.TimeExecuted);
-            var longestTaskDetails = longestTask?.Heading + " - " + longestTask?.TimeExecuted.ToString();
+            //var longestTask = weeklyTasks.MaxBy(x => x.TimeExecuted);
+            //var longestTaskDetails = longestTask?.Heading + " - " + longestTask?.TimeExecuted.ToString();
 
-            var shortestTask = weeklyTasks.MinBy(x => x.TimeExecuted);
-            var shortestTaskDetails = shortestTask?.Heading + " - " + shortestTask?.TimeExecuted.ToString();
+            //var shortestTask = weeklyTasks.MinBy(x => x.TimeExecuted);
+            //var shortestTaskDetails = shortestTask?.Heading + " - " + shortestTask?.TimeExecuted.ToString();
 
-            var tasksCount = weeklyTasks.Count();
+            //var tasksCount = weeklyTasks.Count();
 
-            var daywiseTasks = weeklyTasks.GroupBy(x => x.StartTime?.Date);
-            TimeSpan? dailyTimeSpent = TimeSpan.Zero;
-            TimeSpan? highestTimeSpent = TimeSpan.Zero;
-            string mostProductiveDay = null;
+            //var daywiseTasks = weeklyTasks.GroupBy(x => x.StartTime?.Date);
+            //TimeSpan? dailyTimeSpent = TimeSpan.Zero;
+            //TimeSpan? highestTimeSpent = TimeSpan.Zero;
+            //string mostProductiveDay = null;
 
-            foreach (var dailyTasks in daywiseTasks)
-            {
-                foreach (var task in dailyTasks)
-                {
-                    dailyTimeSpent += task.TimeExecuted;
-                }
+            //foreach (var dailyTasks in daywiseTasks)
+            //{
+            //    foreach (var task in dailyTasks)
+            //    {
+            //        dailyTimeSpent += task.TimeExecuted;
+            //    }
 
-                if (dailyTimeSpent > highestTimeSpent)
-                {
-                    mostProductiveDay = dailyTasks.FirstOrDefault().StartTime.Value.ToString("dd/MM/yyyy");
-                    highestTimeSpent = dailyTimeSpent;
-                }
-            }
+            //    if (dailyTimeSpent > highestTimeSpent)
+            //    {
+            //        mostProductiveDay = dailyTasks.FirstOrDefault().StartTime.Value.ToString("dd/MM/yyyy");
+            //        highestTimeSpent = dailyTimeSpent;
+            //    }
+            //}
 
-            consoleTable.AddRow(totalTime, totalTime / (endOfWeek - startOfWeek), mostProductiveDay + " - " + highestTimeSpent, longestTaskDetails, shortestTaskDetails, tasksCount);
-            consoleTable.Write();
+            //consoleTable.AddRow(totalTime, totalTime / (endOfWeek - startOfWeek), mostProductiveDay + " - " + highestTimeSpent, longestTaskDetails, shortestTaskDetails, tasksCount);
+            //consoleTable.Write();
         }
 
         private void GenerateMonthlySummary(List<UserTask> tasks)
         {
-            var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 01);
-            var endOfMonth = DateTime.Now.Date;
+            //var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 01);
+            //var endOfMonth = DateTime.Now.Date;
 
-            ConsoleTable consoleTable = new ConsoleTable("Total Time Spent", "Average Time Spent Each day", "Most Productive Day - Time Spent", "Longest Task - Time Spent", "Shortest Task - Time Spent", "Total number of tasks");
+            //ConsoleTable consoleTable = new ConsoleTable("Total Time Spent", "Average Time Spent Each day", "Most Productive Day - Time Spent", "Longest Task - Time Spent", "Shortest Task - Time Spent", "Total number of tasks");
 
-            var weeklyTasks = tasks.Where(x => x.StartTime?.Date >= startOfMonth && x.StartTime?.Date <= endOfMonth);
-            var timeSpentOnTasks = weeklyTasks.Select(x => x.TimeExecuted);
+            //var weeklyTasks = tasks.Where(x => x.StartTime?.Date >= startOfMonth && x.StartTime?.Date <= endOfMonth);
+            //var timeSpentOnTasks = weeklyTasks.Select(x => x.TimeExecuted);
 
-            TimeSpan? totalTime = TimeSpan.Zero;
-            foreach (var timeSpent in timeSpentOnTasks)
-            {
-                totalTime += timeSpent;
-            }
+            //TimeSpan? totalTime = TimeSpan.Zero;
+            //foreach (var timeSpent in timeSpentOnTasks)
+            //{
+            //    totalTime += timeSpent;
+            //}
 
-            var longestTask = weeklyTasks.MaxBy(x => x.TimeExecuted);
-            var longestTaskDetails = longestTask?.Heading + " - " + longestTask?.TimeExecuted.ToString();
+            //var longestTask = weeklyTasks.MaxBy(x => x.TimeExecuted);
+            //var longestTaskDetails = longestTask?.Heading + " - " + longestTask?.TimeExecuted.ToString();
 
-            var shortestTask = weeklyTasks.MinBy(x => x.TimeExecuted);
-            var shortestTaskDetails = shortestTask?.Heading + " - " + shortestTask?.TimeExecuted.ToString();
+            //var shortestTask = weeklyTasks.MinBy(x => x.TimeExecuted);
+            //var shortestTaskDetails = shortestTask?.Heading + " - " + shortestTask?.TimeExecuted.ToString();
 
-            var tasksCount = weeklyTasks.Count();
+            //var tasksCount = weeklyTasks.Count();
 
-            var daywiseTasks = weeklyTasks.GroupBy(x => x.StartTime?.Date);
-            TimeSpan? dailyTimeSpent = TimeSpan.Zero;
-            TimeSpan? highestTimeSpent = TimeSpan.Zero;
-            string mostProductiveDay = null;
+            //var daywiseTasks = weeklyTasks.GroupBy(x => x.StartTime?.Date);
+            //TimeSpan? dailyTimeSpent = TimeSpan.Zero;
+            //TimeSpan? highestTimeSpent = TimeSpan.Zero;
+            //string mostProductiveDay = null;
 
-            foreach (var dailyTasks in daywiseTasks)
-            {
-                foreach (var task in dailyTasks)
-                {
-                    dailyTimeSpent += task.TimeExecuted;
-                }
+            //foreach (var dailyTasks in daywiseTasks)
+            //{
+            //    foreach (var task in dailyTasks)
+            //    {
+            //        dailyTimeSpent += task.TimeExecuted;
+            //    }
 
-                if (dailyTimeSpent > highestTimeSpent)
-                {
-                    mostProductiveDay = dailyTasks.FirstOrDefault().StartTime.Value.ToString("dd/MM/yyyy");
-                    highestTimeSpent = dailyTimeSpent;
-                }
-            }
+            //    if (dailyTimeSpent > highestTimeSpent)
+            //    {
+            //        mostProductiveDay = dailyTasks.FirstOrDefault().StartTime.Value.ToString("dd/MM/yyyy");
+            //        highestTimeSpent = dailyTimeSpent;
+            //    }
+            //}
 
-            consoleTable.AddRow(totalTime.Value.ToString("hh:mm:ss"), (totalTime / (endOfMonth - startOfMonth)).Value.ToString("hh:mm:ss"), mostProductiveDay + " - " + highestTimeSpent.Value.ToString("hh/mm/ss"), longestTaskDetails, shortestTaskDetails, tasksCount);
-            consoleTable.Write();
+            //consoleTable.AddRow(totalTime.Value.ToString("hh:mm:ss"), (totalTime / (endOfMonth - startOfMonth)).Value.ToString("hh:mm:ss"), mostProductiveDay + " - " + highestTimeSpent.Value.ToString("hh/mm/ss"), longestTaskDetails, shortestTaskDetails, tasksCount);
+            //consoleTable.Write();
         }
     }
 }

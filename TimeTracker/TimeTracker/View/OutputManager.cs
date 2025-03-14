@@ -2,6 +2,7 @@
 using Spectre.Console;
 using TimeTracker.Model;
 using ConsoleTables;
+using System.Text;
 
 namespace TimeTracker.View
 {
@@ -82,7 +83,7 @@ namespace TimeTracker.View
             }
             else
             {
-                runningTaskDetails = "Current Running Task : " + runningTask.Heading + " - Start Time : " + runningTask.StartTime.Value.ToString("MMM d,yyyy - h:mm tt");
+                runningTaskDetails = "Current Running Task : " + runningTask.Heading + " - Start Time : " + runningTask.TimeIntervals.FirstOrDefault().Key.ToString();
             }
             Console.SetCursorPosition(consoleWidth - runningTaskDetails.Length - 1, 2);
             Console.WriteLine($"{runningTaskDetails}".Pastel(ConsoleColor.Magenta));
@@ -90,8 +91,9 @@ namespace TimeTracker.View
 
         public void PrintSpecificTaskInformation(UserTask task)
         {
-            ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "TaskStatus", "StartTime", "EndTime", "TimeExecuted");
-            taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yy - h:mm tt") : task.StartTime, task.EndTime.HasValue ? task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
+            ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "Task Status", "Start Time", "Recent Stopped Time", "Time Executed");
+
+            taskTable.AddRow(task.Heading, task.Description, task.Status, task.TimeIntervals.FirstOrDefault().Key, task.TimeIntervals.LastOrDefault().Value, task.TimeExecuted);
             taskTable.Write();
         }
 
@@ -113,10 +115,10 @@ namespace TimeTracker.View
         public void PrintTasks(List<UserTask> tasks, string displayMessage)
         {
             Console.WriteLine($"{displayMessage}".Pastel(ConsoleColor.Cyan));
-            ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "TaskStatus", "StartTime", "EndTime", "TimeExecuted");
+            ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "Task Status", "Start Time", "Recent Stopped Time", "Time Executed");
             foreach (UserTask task in tasks)
             {
-                taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.StartTime, task.EndTime.HasValue ? task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
+                taskTable.AddRow(task.Heading, task.Description, task.Status, task.TimeIntervals.FirstOrDefault().Key, task.TimeIntervals.LastOrDefault().Value, task.TimeExecuted);
             }
 
             taskTable.Write();
@@ -127,14 +129,14 @@ namespace TimeTracker.View
             if (userTasks.Count >= 3)
             {
                 Console.WriteLine("\nRecently updated three tasks : ".Pastel(ConsoleColor.Cyan));
-                ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "TaskStatus", "StartTime", "EndTime", "TimeExecuted");
+                ConsoleTable taskTable = new ConsoleTable("Heading", "Description", "Task Status", "Start Time", "Recent Stopped Time", "Time Executed");
                 UserTask task;
 
                 for (int index = 0; index < 3; index++)
                 {
                     task = userTasks[userTasks.Count() - index - 1];
-                    taskTable.AddRow(task.Heading, task.Description, task.Status, task.StartTime.HasValue ? task.StartTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.StartTime, task.EndTime.HasValue ? task.EndTime.Value.ToString("MMM d,yyyy - h:mm tt") : task.EndTime, task.TimeExecuted);
 
+                    taskTable.AddRow(task.Heading, task.Description, task.Status, task.TimeIntervals.FirstOrDefault().Key, task.TimeIntervals.LastOrDefault().Value, task.TimeExecuted);
                 }
 
                 taskTable.Write();

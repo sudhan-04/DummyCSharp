@@ -92,7 +92,7 @@ namespace TimeTracker.View
         public string ReplaceInvalidInputInteger()
         {
             Console.WriteLine("The input must be an integer.".Pastel(ConsoleColor.Red));
-            Console.Write("Provide the Input again : ".Pastel(ConsoleColor.Yellow));
+            Console.Write("Provide the User ID : ".Pastel(ConsoleColor.Yellow));
             string inputParameter = Console.ReadLine();
 
             return inputParameter;
@@ -153,7 +153,7 @@ namespace TimeTracker.View
             new SelectionPrompt<string>()
             .Title("\n[yellow2] Select the field to be edited : [/]")
             .AddChoices(new[] {
-                    $"{EditField.EditHeading}", $"{EditField.EditDescription}", $"{EditField.EditStartTime}",$"{EditField.EditEndTime}",$"{EditField.EditTimeExecuted}"
+                    $"{EditField.Heading}", $"{EditField.Description}", $"{EditField.TimeInterval}"
                     }));
 
             return editField;
@@ -201,7 +201,7 @@ namespace TimeTracker.View
             new SelectionPrompt<string>()
             .Title("\n[yellow2] Select the operation to be performed on the list of tasks : [/]")
             .AddChoices(new[] {
-                    $"{TaskListOperations.FilterTasks}", $"{TaskListOperations.SortTasks}", $"{TaskListOperations.ViewTaskSummary}", $"{TaskListOperations.ExportToCsv}", $"{TaskListOperations.ReturnToDashboard}"
+                    $"{TaskListOperations.FilterTasks}", $"{TaskListOperations.SortTasks}", $"{TaskListOperations.ExportToCsv}", $"{TaskListOperations.ReturnToDashboard}"
                     }));
 
             return tasksOperation;
@@ -213,7 +213,7 @@ namespace TimeTracker.View
             new SelectionPrompt<string>()
             .Title("\n[yellow2] Select the field based on which the list is to be sorted : [/]")
             .AddChoices(new[] {
-                    $"{SortingField.Heading}", $"{SortingField.TaskStatus}", $"{SortingField.TimeExecuted}", $"{SortingField.StartTime}", $"{SortingField.EndTime}"
+                    $"{SortingField.Heading}", $"{SortingField.TaskStatus}", $"{SortingField.TimeExecuted}"
                     }));
 
             return sortingField;
@@ -237,7 +237,7 @@ namespace TimeTracker.View
             new MultiSelectionPrompt<string>()
                 .Title("\n[yellow2] Select the field based on which the list is to be filtered : [/]")
                 .InstructionsText("[grey](Use [blue]Space[/] to select, [green]Enter[/] to confirm)[/]")
-                .AddChoices(new[] { $"{FilteringField.Heading}", $"{FilteringField.StartTime}", $"{FilteringField.TaskStatus}", $"{FilteringField.EndTime }", $"{FilteringField.TimeExecuted}", $"{FilteringField.Description}"})
+                .AddChoices(new[] { $"{FilteringField.Heading}", $"{FilteringField.TaskStatus}",  $"{FilteringField.TimeExecuted}", $"{FilteringField.Description}" })
                 );
 
             AnsiConsole.MarkupLine($"\n[green]Selected Fields : {string.Join(", ", filteringFields)}[/]");
@@ -267,20 +267,37 @@ namespace TimeTracker.View
             return userSelectedIndex;
         }
 
-        public DateTime GetStartDateTime()
+        public DateTime? GetStartDateTime(string currentTime)
         {
-            Console.Write("\nPlease enter the modified start date and time (format: yyyy-MM-dd HH:mm:ss) : ".Pastel(ConsoleColor.Yellow));
+            Console.Write($"\nPlease enter the modified start date and time (Current : {currentTime}), press enter to skip : ".Pastel(ConsoleColor.Yellow));
             var inputDateTime = Console.ReadLine();
 
-            while (!_inputValidation.IsValidDateTime(inputDateTime))
+            if (inputDateTime != null && inputDateTime != "")
             {
-                Console.WriteLine("The input must be in date time format (format: yyyy-MM-dd HH:mm:ss) !!".Pastel(ConsoleColor.Red));
-                Console.Write("Please enter the modified start date and time (format: yyyy-MM-dd HH:mm:ss) : ".Pastel(ConsoleColor.Yellow));
-                inputDateTime = Console.ReadLine();
+                while (!_inputValidation.IsValidDateTime(inputDateTime))
+                {
+                    Console.WriteLine("The input must be in date time format (format: yyyy-MM-dd HH:mm:ss) !!".Pastel(ConsoleColor.Red));
+                    Console.Write("Please enter the modified start date and time (format: yyyy-MM-dd HH:mm:ss) : ".Pastel(ConsoleColor.Yellow));
+                    inputDateTime = Console.ReadLine();
+                }
+
+                DateTime.TryParse(inputDateTime, out DateTime newStartTime);
+                return newStartTime;
             }
 
-            DateTime.TryParse(inputDateTime, out DateTime validDateTime);
-            return validDateTime;
+            else
+                return null;
+        }
+
+        public string GetIntervalAction()
+        {
+            var action = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Choose an action : ")
+                    .AddChoices($"{TimeIntervalOptions.DeleteTimeInterval}", $"{TimeIntervalOptions.EditTimeInterval}")
+            );
+
+            return action;
         }
 
         public DateTime GetTargetStartDate()
@@ -331,29 +348,53 @@ namespace TimeTracker.View
             return validDateTime;
         }
 
-        public DateTime GetEndDateTime()
+        public DateTime GetEndDateTime(string startTime, string currentTime)
         {
-            Console.Write("\nPlease enter the modified end date and time (format: yyyy-MM-dd HH:mm:ss) : ".Pastel(ConsoleColor.Yellow));
-            var inputDateTime = Console.ReadLine();
+            DateTime newEndTime = GetValidEndDateTime(currentTime);
+            var startDateTime = DateTime.Parse(startTime);
 
-            while (!_inputValidation.IsValidDateTime(inputDateTime))
+            while (startDateTime > newEndTime)
             {
-                Console.WriteLine("The input must be in date time format (format: yyyy-MM-dd HH:mm:ss) !!".Pastel(ConsoleColor.Red));
-                Console.Write("Please enter the modified end date and time (format: yyyy-MM-dd HH:mm:ss) : ".Pastel(ConsoleColor.Yellow));
-                inputDateTime = Console.ReadLine();
+                Console.WriteLine($"The start time of the interval is {startDateTime}.");
+                Console.WriteLine("Enter a valid end time greater than the start time...");
+                newEndTime = GetValidEndDateTime(currentTime);
             }
 
-            DateTime.TryParse(inputDateTime, out DateTime validDateTime);
-            return validDateTime;
+            return newEndTime;
+
         }
 
-        public DateTime GetValidTimeShifts(User user, int editChoiceIndex, bool isStartTime)
+        private DateTime GetValidEndDateTime(string currentTime)
         {
-            var timeType = isStartTime ? "start time" : "end time";
-            Console.WriteLine($"The {timeType} of the task is saved as {user.UserTasks[editChoiceIndex].EndTime}".Pastel(ConsoleColor.Red));
-            Console.WriteLine($"The {timeType} of the task must also be changed.".Pastel(ConsoleColor.Red));
-            DateTime modifiedDateTime = isStartTime ? GetStartDateTime() : GetEndDateTime();
-            return modifiedDateTime;
+            Console.Write($"\nPlease enter the modified end date and time (Current : {currentTime}), press enter to skip : ".Pastel(ConsoleColor.Yellow));
+            var inputDateTime = Console.ReadLine();
+
+            if (inputDateTime != null && inputDateTime != "")
+            {
+                while (!_inputValidation.IsValidDateTime(inputDateTime))
+                {
+                    Console.WriteLine("The input must be in date time format (format: yyyy-MM-dd HH:mm:ss) !!".Pastel(ConsoleColor.Red));
+                    Console.Write("Please enter the modified end date and time (format: yyyy-MM-dd HH:mm:ss) : ".Pastel(ConsoleColor.Yellow));
+                    inputDateTime = Console.ReadLine();
+                }
+            }
+
+            DateTime.TryParse(inputDateTime, out DateTime newEndTime);
+            return newEndTime;
+        }
+
+        public string SelectTimeInterval(Dictionary<string, string> timeIntervals)
+        {
+            var intervalChoices = timeIntervals.Select(interval =>
+                $"{interval.Key} -- {interval.Value}"
+            ).ToList();
+
+            return AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select a time interval:")
+                    .PageSize(5)
+                    .AddChoices(intervalChoices)
+            );
         }
 
         private string GetTaskTimeExecuted()
