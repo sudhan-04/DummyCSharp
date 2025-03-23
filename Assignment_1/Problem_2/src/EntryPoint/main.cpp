@@ -1,9 +1,12 @@
-#include "..\Presentation\UserInterface.hpp"
-#include <string>
+#include "../Presentation/UserInterface.hpp"
 
+//Main method of the program
 int main()
 {
-    UserInterface userInterface;
+    FunctionContainer functionContainer;
+    FunctionController functionController(functionContainer);
+    UserInterface userInterface(functionController);
+
     userInterface.PrintWelcome();
     userInterface.PerformFunctionOperation();
 }

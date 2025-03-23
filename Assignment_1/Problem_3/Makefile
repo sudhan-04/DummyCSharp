@@ -2,7 +2,7 @@ CXX = g++
 
 CXXFLAGS = -Wall -std=c++11
  
-TARGET = FunctionCounter
+TARGET = NameFunctions
  
 SRCDIR = src
 
