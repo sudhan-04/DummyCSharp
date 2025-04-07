@@ -1,0 +1,13 @@
+#ifndef POSITION_HPP
+#define POSITION_HPP
+
+enum class EMPLOYEE_POSITION
+{
+    EP_JUNIOR,
+    EP_SENIOR,
+    EP_LEAD,
+    EP_PROJECTMANAGER,
+    EP_SENIORLEAD
+};
+
+#endif
